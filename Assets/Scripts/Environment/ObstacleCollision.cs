@@ -12,33 +12,43 @@ public class ObstacleCollision : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (gameOverPanel.activeSelf) return;
-        this.gameObject.GetComponent<BoxCollider>().enabled = false;
+        if (GameState.IsGameEnded) return;
+
+        GetComponent<BoxCollider>().enabled = false;
         thePlayer.GetComponent<PlayerMove>().enabled = false;
         charModel.GetComponent<Animator>().Play("Falling Back Death");
         crashThud.Play();
-        StartCoroutine(ShowGameOver());
+
+        StartCoroutine(LoadLoseSceneAfterDelay(1f));
+    }
+
+    IEnumerator LoadLoseSceneAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        GameState.EndGame();
+        SceneManager.LoadScene("LoseScene");
     }
 
     IEnumerator ShowGameOver()
     {
         yield return new WaitForSeconds(1f);
         gameOverPanel.SetActive(true);
-        Time.timeScale = 0f;
+        GameState.EndGame();
     }
 
     public void RestartGame()
     {
-        Time.timeScale = 1f; 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); 
+        CollectableControl.coinCount = 0;
+        GameState.ResetGame();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void QuitGame()
     {
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false; 
-        #else
-            Application.Quit(); 
-        #endif
+#else
+        Application.Quit();
+#endif
     }
 }
